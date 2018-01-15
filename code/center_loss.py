@@ -14,10 +14,9 @@ class CenterLoss(nn.Module):
 
     def forward(self, y, hidden):
         batch_size = hidden.size()[0]
-
         expanded_centers = self.centers.index_select(dim=0, index=y.long())
-        intra_distance = hidden - expanded_centers
-        loss = (self.lambda_c / 2.0) * intra_distance.pow(2).sum() / batch_size
+        intra_distances = (hidden - expanded_centers).pow(2).sum()
+        loss = (self.lambda_c / 2.0 / batch_size) * intra_distances
         return loss
 
     def cuda(self, device_id=None):

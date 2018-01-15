@@ -9,11 +9,14 @@ import torch.optim.lr_scheduler as lr_scheduler
 import argparse
 from tqdm import tqdm
 from center_loss import CenterLoss
+from contrastive_center_loss import ContrastiveCenterLoss
 from models import LeNetPP
 from utils import AverageMeter, accuracy, visualize
 
 
 parser = argparse.ArgumentParser(description='PyTorch Center Loss Example')
+parser.add_argument('--loss', type=int, default=0,
+                    help='0: Center Loss, 1: Contrastive-Center Loss')
 parser.add_argument('--dim-hidden', type=int, default=2,
                     help='dimension of hidden layer')
 parser.add_argument('--lambda-c', type=float, default=1.0,
@@ -96,8 +99,12 @@ def main():
         model = model.cuda()
 
     nll_loss = nn.NLLLoss()
-    center_loss = CenterLoss(dim_hidden=args.dim_hidden, num_classes=10,
-                             lambda_c=args.lambda_c, use_cuda=args.cuda)
+    if args.loss == 0:
+        center_loss = CenterLoss(dim_hidden=args.dim_hidden, num_classes=10,
+                                 lambda_c=args.lambda_c, use_cuda=args.cuda)
+    if args.loss == 1:
+        center_loss = ContrastiveCenterLoss(dim_hidden=args.dim_hidden, num_classes=10,
+                                            lambda_c=args.lambda_c, use_cuda=args.cuda)
     if args.cuda:
         nll_loss, center_loss = nll_loss.cuda(), center_loss.cuda()
     criterion = [nll_loss, center_loss]
