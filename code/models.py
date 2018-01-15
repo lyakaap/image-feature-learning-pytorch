@@ -35,4 +35,4 @@ class LeNetPP(nn.Module):
         x = x.view(-1, 128 * 3 * 3)
         ip1 = self.prelu_ip1(self.ip1(x))
         ip2 = self.ip2(ip1)
-        return ip1, F.log_softmax(ip2)
+        return ip1, F.log_softmax(ip2, dim=1)

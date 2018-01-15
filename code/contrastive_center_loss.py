@@ -3,9 +3,9 @@ import torch.nn as nn
 from torch.autograd import Variable
 
 
-class CenterLoss(nn.Module):
+class ContrastiveCenterLoss(nn.Module):
     def __init__(self, dim_hidden, num_classes, lambda_c=1.0, use_cuda=True):
-        super(CenterLoss, self).__init__()
+        super(ContrastiveCenterLoss, self).__init__()
         self.dim_hidden = dim_hidden
         self.num_classes = num_classes
         self.lambda_c = lambda_c
@@ -13,18 +13,15 @@ class CenterLoss(nn.Module):
         self.use_cuda = use_cuda
 
     def forward(self, y, hidden):
-        # torch.histc is not implemented on CPU
-        # To calculate the total number of every class in one mini-batch.
-        # See Equation 4 in the paper
         if self.use_cuda:
             hist = Variable(
                 torch.histc(y.cpu().data.float(), bins=self.num_classes, min=0,
-                            max=self.num_classes) + 1
+                            max=self.num_classes-1) + 1
             ).cuda()
         else:
             hist = Variable(
                 torch.histc(y.data.float(), bins=self.num_classes, min=0,
-                            max=self.num_classes) + 1
+                            max=self.num_classes-1) + 1
             )
 
         centers_count = hist.index_select(0, y.long())
@@ -33,16 +30,14 @@ class CenterLoss(nn.Module):
         batch_size = hidden.size()[0]
         hidden = hidden.view(batch_size, 1, 1, -1).squeeze()
 
-        # To check the dim of centers and features
-        if hidden.size()[1] != self.dim_hidden:
-            raise ValueError(
-                "Center's dim: {0} "
-                "should be equal to input feature's dim: {1}".format(
-                    self.dim_hidden, hidden.size()[1]))
-
         centers_pred = self.centers.index_select(0, y.long())
         diff = hidden - centers_pred
-        loss = (self.lambda_c / 2.0) * (diff.pow(2).sum(1) / centers_count).sum()
+        intra_distance = diff.pow(2).sum(1)
+        inter_distance = diff.pow(2).sum(1)
+        epsilon = 1e-6
+        loss = (self.lambda_c / 2.0) * \
+               (intra_distance / centers_count).sum() / \
+               ((inter_distance / centers_count).sum() + epsilon)
         return loss
 
     def cuda(self, device_id=None):
@@ -57,7 +52,7 @@ class CenterLoss(nn.Module):
 
 
 def test():
-    ct = CenterLoss(10, 2)
+    ct = ContrastiveCenterLoss(10, 2)
     y = Variable(torch.LongTensor([0, 0, 0, 1]))
     feat = Variable(torch.zeros(4, 2), requires_grad=True)
 

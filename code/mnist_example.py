@@ -6,11 +6,11 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader
 import torch.optim.lr_scheduler as lr_scheduler
 
-import matplotlib.pyplot as plt
 import argparse
-from CenterLoss import CenterLoss
+from tqdm import tqdm
+from center_loss import CenterLoss
 from models import LeNetPP
-from utils import AverageMeter, accuracy
+from utils import AverageMeter, accuracy, visualize
 
 
 parser = argparse.ArgumentParser(description='PyTorch Center Loss Example')
@@ -46,23 +46,6 @@ if args.cuda:
     torch.cuda.manual_seed(args.seed)
 
 
-def visualize(feat, labels, epoch):
-    plt.ion()
-    c = ['#ff0000', '#ffff00', '#00ff00', '#00ffff', '#0000ff',
-         '#ff00ff', '#990000', '#999900', '#009900', '#009999']
-    plt.clf()
-    for i in range(10):
-        plt.plot(feat[labels == i, 0], feat[labels == i, 1], '.', c=c[i])
-    plt.legend(
-        ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'], loc='upper right')
-    plt.xlim(xmin=-5, xmax=5)
-    plt.ylim(ymin=-5, ymax=5)
-    plt.text(-4.8, 4.6, "epoch=%d" % epoch)
-    plt.savefig('./images/epoch=%d.jpg' % epoch)
-    plt.draw()
-    plt.pause(0.001)
-
-
 def train(train_loader, model, criterion, optimizer, epoch):
     losses = AverageMeter()
     top1 = AverageMeter()
@@ -71,7 +54,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
 
     ip1_loader = []
     idx_loader = []
-    for i, (x, y) in enumerate(train_loader):
+    for i, (x, y) in tqdm(enumerate(train_loader), total=len(train_loader)):
         if args.cuda:
             x, y = x.cuda(), y.cuda()
         x, y = Variable(x), Variable(y)
