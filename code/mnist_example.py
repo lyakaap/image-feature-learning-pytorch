@@ -80,9 +80,11 @@ def train(train_loader, model, criterion, optimizer, epoch):
         ip1_loader.append(ip1)
         idx_loader.append(y)
 
+    print('accuracy: {}, loss: {}'.format(top1, losses))
     feat = torch.cat(ip1_loader, 0)
     labels = torch.cat(idx_loader, 0)
-    visualize(feat.data.cpu().numpy(), labels.data.cpu().numpy(), epoch)
+    visualize(feat.data.cpu().numpy(), labels.data.cpu().numpy(),
+              criterion[1].centers.data.cpu().numpy(), epoch, 10)
 
 
 def main():

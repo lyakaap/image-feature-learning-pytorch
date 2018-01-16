@@ -14,8 +14,8 @@ class CenterLoss(nn.Module):
 
     def forward(self, y, hidden):
         batch_size = hidden.size()[0]
-        expanded_centers = self.centers.index_select(dim=0, index=y.long())
-        intra_distances = (hidden - expanded_centers).pow(2).sum()
+        expanded_centers = self.centers.index_select(dim=0, index=y)
+        intra_distances = hidden.dist(expanded_centers)
         loss = (self.lambda_c / 2.0 / batch_size) * intra_distances
         return loss
 
