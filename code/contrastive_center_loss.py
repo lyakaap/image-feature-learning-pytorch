@@ -22,6 +22,7 @@ class ContrastiveCenterLoss(nn.Module):
         self.centers = nn.Parameter(torch.randn(num_classes, dim_hidden))
         self.use_cuda = use_cuda
 
+    # may not work due to flowing gradient. change center calculation to exp moving avg may work.
     def forward(self, y, hidden):
         batch_size = hidden.size()[0]
         expanded_centers = self.centers.expand(batch_size, -1, -1)

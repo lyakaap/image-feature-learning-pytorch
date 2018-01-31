@@ -19,17 +19,17 @@ class AverageMeter(object):
         self.avg = self.sum / self.count
 
 
-def accuracy(output, target, topk=(1,)):
+def accuracy(output, target, top_k=(1,)):
     """Computes the precision@k for the specified values of k"""
-    maxk = max(topk)
+    max_k = max(top_k)
     batch_size = target.size(0)
 
-    _, pred = output.topk(maxk, 1, True, True)
+    _, pred = output.topk(max_k, 1, True, True)
     pred = pred.t()
     correct = pred.eq(target.view(1, -1).expand_as(pred))
 
     res = []
-    for k in topk:
+    for k in top_k:
         correct_k = correct[:k].view(-1).float().sum(0, keepdim=True)
         res.append(correct_k.mul_(100.0 / batch_size))
     return res
